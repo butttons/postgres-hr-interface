@@ -1,0 +1,19 @@
+.card-enter-active {
+    animation: cardAnim 0.3s ease-in;
+}
+.card-leave-active {
+    animation: cardAnim 0.3s ease-in reverse;
+}
+.h-nav {
+    height: calc(100vh - 50px);
+}
+@keyframes cardAnim {
+    from {
+        opacity: 0;
+        transform: scaleY(0);
+    }
+    to {
+        opacity: 1;
+        transform: scaleY(1);
+    }
+}

@@ -8,6 +8,9 @@ export const enum Mutations {
     SET_ROLES = 'SET_ROLES',
     SELECT_SCHEMAS = 'SELECT_SCHEMAS',
     SELECT_ROLES = 'SELECT_ROLES',
+    SET_CONFIG_IGNORE = 'SET_CONFIG_IGNORE',
+    SET_CACHE_STATUS = 'SET_CACHE_STATUS',
+    SET_CACHE_CLIENT = 'SET_CACHE_CLIENT',
 }
 
 export const mutations: MutationTree<State> = {
@@ -18,4 +21,10 @@ export const mutations: MutationTree<State> = {
     [Mutations.SELECT_SCHEMAS]: (state, schemas) =>
         (state.selected.schemas = schemas),
     [Mutations.SELECT_ROLES]: (state, roles) => (state.selected.roles = roles),
+    [Mutations.SET_CONFIG_IGNORE]: (state, isIgnore) =>
+        (state.config.ignorePg = isIgnore),
+    [Mutations.SET_CACHE_STATUS]: (state, status) =>
+        (state.config.cache.hasCached = status),
+    [Mutations.SET_CACHE_CLIENT]: (state, client) =>
+        (state.config.cache.client = client),
 };

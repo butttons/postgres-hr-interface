@@ -1,3 +1,30 @@
 @tailwind base;
 @tailwind components;
+
+fieldset {
+    display: block;
+    margin-inline-start: 2px;
+    margin-inline-end: 2px;
+    padding-block-start: 0.35em;
+    padding-inline-start: 0.75em;
+    padding-inline-end: 0.75em;
+    padding-block-end: 0.625em;
+    min-inline-size: min-content;
+    border-width: 1px;
+    border-image: initial;
+}
+
+.input--basic {
+    @apply w-full bg-gray-200 text-gray-800 outline-none;
+}
+.input--basic:focus {
+    @apply bg-white;
+}
+.button--basic {
+    @apply bg-primary-400 text-white p-2 rounded border-primary-500 border uppercase text-xs;
+}
+.button--basic:hover {
+    @apply bg-primary-500 border-primary-600;
+}
+
 @tailwind utilities;

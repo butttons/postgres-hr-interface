@@ -1,10 +1,4 @@
 export type Maybe<T> = T | null;
-interface BaseGrant {
-    grantor: string;
-    grantee: string;
-    privilege_type: string;
-    is_grantable: InformationSchema.Types.YesOrNo;
-}
 export namespace InformationSchema {
     // Table names of relevant tables that we need.
     export namespace TableNames {
@@ -90,6 +84,13 @@ export namespace InformationSchema {
             data_type: string;
         }
     }
+    export interface BaseGrant {
+        grantor: string;
+        grantee: string;
+        privilege_type: string;
+        is_grantable: InformationSchema.Types.YesOrNo;
+    }
+
     // The shape of the grants table which give information regarding privileges of each entity.
     export namespace Grants {
         export interface Column extends BaseGrant {

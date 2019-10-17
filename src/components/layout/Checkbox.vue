@@ -1,6 +1,6 @@
 <template lang="pug">
-  .checkbox.items-center.p-2.inline-flex.rounded.pointer.select-none(:class='wrapColors' @click='$emit("selected", label)')
-    i.mr-2(:class='iconFont')
+  .checkbox.items-center.p-2.inline-flex.rounded.pointer.select-none.cursor-pointer(:class='wrapColors' @click='$emit("selected", label)')
+    fa-icon.mr-1(:icon='iconFont')
     .text-sm {{ label }}
 </template>
 <script lang="ts">
@@ -17,15 +17,12 @@
       },
       wrapColors(): Record<string, boolean> {
         return {
-          'bg-gray-300 text-gray-700': !this.isSelected,
-          'bg-green-300 text-green-700': this.isSelected,
+          'bg-gray-300 text-gray-700 hover:bg-gray-400': !this.isSelected,
+          'bg-green-300 text-green-700 hover:bg-green-400': this.isSelected,
         };
       },
-      iconFont(): Record<string, boolean> {
-        return {
-          'fas fa-check-circle': this.isSelected,
-          'far fa-circle': !this.isSelected,
-        };
+      iconFont(): string[] {
+        return this.isSelected ? ['fas', 'check-circle'] : ['far', 'circle'];
       },
     },
   });
