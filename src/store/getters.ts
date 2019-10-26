@@ -4,6 +4,7 @@ import { InformationSchema } from '@/utils/@types-information';
 
 export type EntityGrant = Record<string, string[]>;
 export const enum Getters {
+    CONNECTION_LIST = 'clientList',
     SCHEMA_LIST = 'schemaList',
     ROLE_LIST = 'roleList',
     TABLE_COLUMN_MAP = 'tableColumnMap',
@@ -131,7 +132,10 @@ const parseTrigger = (trigger: InformationSchema.Default.Trigger) => {
         label: `${trigger_schema}.${trigger_name}`,
         functionTarget,
         tableTarget: `${event_object_schema}.${event_object_table}`,
-        meta: [action_timing, event_manipulation],
+        meta: {
+            actionTiming: action_timing,
+            eventManipulation: event_manipulation,
+        },
     };
 };
 interface EntityRow {
@@ -139,8 +143,7 @@ interface EntityRow {
     level: number;
     label: string;
     grants: EntityGrant;
-
-    meta?: any[];
+    meta?: any;
 }
 const entityRow = (
     type: EntityTypes,
@@ -166,6 +169,11 @@ const entityRow = (
 };
 
 export const getters: GetterTree<State, State> = {
+    [Getters.CONNECTION_LIST]: ({
+        config: {
+            cache: { connectionList },
+        },
+    }) => (connectionList ? Object.entries(connectionList!) : null),
     [Getters.SCHEMA_LIST]: (state) =>
         filterPg(state.init.schemas, state.config.ignorePg),
     [Getters.ROLE_LIST]: (state) =>
@@ -182,7 +190,6 @@ export const getters: GetterTree<State, State> = {
         ),
     [Getters.GRANT_OBJECT_MAP]: (state) =>
         generateGrantMap(state.grants.objects, state.selected.roles, objectKey),
-
     [Getters.TABLE_COLUMN_MAP]: (state) =>
         generateColumnMap(state.info.columns),
     [Getters.TABLE_SET]: (state) => new Set(state.info.tables.map(tableKey)),
@@ -207,13 +214,7 @@ export const getters: GetterTree<State, State> = {
             if (hasRoutineGrants) {
                 const routineGrants = mapRoutineGrants.get(routineId);
                 result.push(
-                    entityRow(
-                        EntityTypes.ROUTINE,
-                        routineId,
-                        routineGrants,
-                        0,
-                        [['table']],
-                    ),
+                    entityRow(EntityTypes.ROUTINE, routineId, routineGrants, 0),
                 );
             } else {
                 result.push(
@@ -221,7 +222,6 @@ export const getters: GetterTree<State, State> = {
                         EntityTypes.ROUTINE,
                         routineId,
                         emptyGrants(state.selected.roles),
-                        0,
                     ),
                 );
             }

@@ -2,7 +2,9 @@
   .bg-white.m-3.rounded-lg
     .font-display.flex.items-center.justify-between.p-2
       div(:class='titleClass' @click='showBody') {{ title }}
-      fa-icon.text-gray-400.cursor-pointer(:icon='fontName' class='hover:text-gray-600' @click='handleCollapse')
+      div
+        fa-icon.text-gray-400.cursor-pointer(:icon='fontName' class='hover:text-gray-600' @click='handleCollapse' v-if='hasCollapse')
+        fa-icon.text-gray-400.cursor-pointer(icon='times-circle' class='hover:text-gray-600' @click='$emit("close-card")' v-if='hasClose')
     .font-body(v-if='!isCollapsed')
       slot
       slot(name='action')
@@ -15,6 +17,14 @@
     props: {
       title: String,
       collapsed: {
+        type: Boolean,
+        default: false,
+      },
+      hasCollapse: {
+        type: Boolean,
+        default: true,
+      },
+      hasClose: {
         type: Boolean,
         default: false,
       },

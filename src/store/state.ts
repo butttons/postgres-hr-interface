@@ -2,7 +2,8 @@ import { InformationSchema } from '@/utils/@types-information';
 interface StateConfig {
     cache: {
         hasCached: boolean;
-        client: any;
+        currentConnection: string | null;
+        connectionList: Record<string, any> | null;
     };
     ignorePg: boolean;
 }
@@ -38,7 +39,8 @@ export const state: State = {
         ignorePg: true,
         cache: {
             hasCached: false,
-            client: null,
+            currentConnection: null,
+            connectionList: null,
         },
     },
     selected: {

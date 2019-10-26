@@ -5,13 +5,13 @@
         fa-icon.mr-2(:icon='iconFont' v-tooltip='type')
         | {{ title }}
         span.text-xs.ml-2.bg-gray-500.text-gray-800.p-1.rounded(v-if='hasMeta')
-          | {{ meta.join(' ') }}
+          | {{ Object.values(meta).join(' ') }}
     .row__data.flex.justify-around.p-2.flex-grow.text-gray-700.bg-gray-200.rounded-r(:class='slotClass')
       slot
 </template>
 <script lang="ts">
   import Vue from 'vue';
-  import { EntityTypes } from './../store/getters';
+  import { EntityTypes } from '@/store/getters';
 
   export default Vue.extend({
     name: 'z-manage-row',
@@ -19,7 +19,7 @@
       title: String,
       type: String as () => EntityTypes | 'header',
       meta: {
-        type: Array as () => string[],
+        type: Object as () => any,
         default: undefined,
       },
       level: {

@@ -26,5 +26,15 @@ fieldset {
 .button--basic:hover {
     @apply bg-primary-500 border-primary-600;
 }
+.input--full {
+    @apply w-full bg-gray-200 text-gray-800 outline-none p-1 rounded;
+}
+
+.button__nav--icon {
+    @apply h-8 w-8 inline-block rounded px-2 py-1 cursor-pointer text-primary-100;
+}
+.button__nav--icon:hover {
+    @apply bg-primary-600;
+}
 
 @tailwind utilities;

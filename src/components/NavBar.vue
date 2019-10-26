@@ -3,15 +3,26 @@
     .text-lg.text-white.p-3.font-display Postgres
       strong HR
     div.mr-3.flex.items-center
+      div.mr-2.flex
+        select.input--full(@change='handleConnectionChange' v-model='selectedConnection')
+          option(v-for='client, index in clientList' :key='index' :value='client[0]') {{ client[1] | clientName}}
+        button.button__nav--icon.ml-1(v-tooltip='"Add new connection"' @click='$emit("add-connection")')
+          fa-icon.mr-1(icon='plus')
       z-checkbox.mr-2(label='Ignore PG' :selected='ignorePg' @selected='toggleArray(ignorePg, $event)')
-      .h-8.w-8.inline-block.rounded.px-2.py-1.cursor-pointer(class='hover:bg-primary-600' @click='$emit("show-query-log")')
-        fa-icon.text-primary-100(icon='bars')
+      button.button__nav--icon(@click='$emit("show-query-log")' v-tooltip='"Show queries"')
+        fa-icon(icon='bolt')
 </template>
 <script lang="ts">
   import Vue from 'vue';
-  import ZCheckbox from './layout/Checkbox.vue';
-  import { toggleArrayMixin } from './../utils/toggleArray';
-  import { Mutations } from './../store/mutations';
+  import ZFieldset from '@/components/layout/Fieldset.vue';
+
+  import ZCheckbox from '@/components/layout/Checkbox.vue';
+  import { toggleArrayMixin } from '@/utils/toggleArray';
+  import { Mutations } from '@/store/mutations';
+  import { mapState, mapGetters } from 'vuex';
+  import { Getters } from '@/store/getters';
+  import { State } from '../store/state';
+  import { Actions } from '../store/actions';
 
   export default Vue.extend({
     name: 'nav-bar',
@@ -19,12 +30,26 @@
     data() {
       return {
         ignorePg: [] as string[],
+        selectedConnection: '',
       };
+    },
+    filters: {
+      clientName: (config: any) =>
+        `${config.user}@${config.host}:${config.port || 5422}/${config.database}`,
     },
     mounted() {
       if (this.$store.state.config.ignorePg) {
         this.ignorePg = ['Ignore PG'];
       }
+      if (this.$store.state.config.cache.currentConnection) {
+        this.selectedConnection = this.$store.state.config.cache.currentConnection;
+      }
+    },
+    computed: {
+      ...mapState({
+        currentConnection: (state: State) => state.config.cache.currentConnection,
+      }),
+      ...mapGetters([Getters.CONNECTION_LIST]),
     },
     watch: {
       ignorePg(val, oldVal) {
@@ -32,8 +57,16 @@
         this.$store.commit(Mutations.SET_CONFIG_IGNORE, hasIgnore);
       },
     },
+    methods: {
+      handleConnectionChange() {
+        this.$store.dispatch(Actions.SET_CONNECTION, {
+          connectionId: this.selectedConnection,
+        });
+      },
+    },
     components: {
       ZCheckbox,
+      ZFieldset,
     },
   });
 </script>

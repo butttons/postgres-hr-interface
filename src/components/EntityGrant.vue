@@ -7,7 +7,7 @@
 </template>
 <script lang="ts">
   import Vue from 'vue';
-  import { EntityTypes } from './../store/getters';
+  import { EntityTypes } from '@/store/getters';
   export default Vue.extend({
     name: 'z-entity-grant',
     props: {
@@ -60,6 +60,9 @@
           role: this.role,
           entity: this.entity,
         });
+        console.log(
+          `ALLOW ${grant} ON ${this.type} ${this.entity.label} TO ${this.role}`,
+        );
       },
     },
   });

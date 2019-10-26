@@ -1,6 +1,6 @@
 <template lang="pug">
   #app.bg-primary-100.pb-2.font-body
-    nav-bar(@show-query-log='app.showQueryLog = true')
+    nav-bar(@show-query-log='app.showQueryLog = true' @add-connection='app.showAddConnection = true')
     main
       transition(enter-active-class='animated slideInRight fast' leave-active-class='animated slideOutRight faster')
         .query-log.h-screen.bg-primary-700.fixed.top-0.right-0(v-if='app.showQueryLog' class='w-1/2')
@@ -14,26 +14,27 @@
               .text-xs
                 span.text-red-500 Notice: 
                 span Works
-      z-card(title='Add entity')
-        template(#default)
-          form.px-2
-            .flex.justify-between
-              z-fieldset.mr-2(class='w-1/2' label='Name')
-                input.input--basic(type='text')
-              z-fieldset(class='w-1/2' label='Type')
-                select.input--basic
-                  option ROLE
-        template(#action)
+      z-card.mx-auto(v-if='app.showAddConnection' @close-card='app.showAddConnection = false' :has-collapse='false' has-close class='w-1/2' title='Add new connection')
+        z-form-connection
+          
+      //z-card(title='Add entity')
+        form.px-2
+          .flex.justify-between
+            z-fieldset.mr-2(class='w-1/2' label='Name')
+              input.input--basic(type='text')
+            z-fieldset(class='w-1/2' label='Type')
+              select.input--basic
+                option ROLE
           .action__bar.mt-2.border-t
-            .p-2
+            .py-2
               button.button--basic Add
             
-      z-card(title='Select Schemas')
-        .px-2
-          z-checkbox.mr-1.mb-1(v-for='label, index in schemaList' :key='index' :label='label' :selected='selectedSchemas' @selected='toggleArray(selectedSchemas, $event)')
       z-card(title='Select Roles')
-        .px-2
+        .p-2
           z-checkbox.mr-1.mb-1(v-for='label, index in roleList' :key='index' :label='label' :selected='selectedRoles' @selected='toggleArray(selectedRoles, $event)')
+      z-card(title='Select Schemas')
+        .p-2
+          z-checkbox.mr-1.mb-1(v-for='label, index in schemaList' :key='index' :label='label' :selected='selectedSchemas' @selected='toggleArray(selectedSchemas, $event)')
       z-card(ref='manageCard' title='Manage')
         .px-2
           z-checkbox.mr-2(v-for='item, index in config.manage' :key='index' :label='item.label' :selected='selectedEntities' @selected='toggleArray(selectedEntities, $event)')
@@ -46,20 +47,22 @@
 </template>
 <script lang="ts">
   import Vue from 'vue';
-  import NavBar from './components/NavBar.vue';
-  import ZCheckbox from './components/layout/Checkbox.vue';
-  import ZCard from './components/Card.vue';
-  import ZEntityGrant from './components/EntityGrant.vue';
-  import ZManageRow from './components/ManageRow.vue';
-  import ZFieldset from './components/layout/Fieldset.vue';
+  import NavBar from '@/components/NavBar.vue';
+  import ZCheckbox from '@/components/layout/Checkbox.vue';
+  import ZCard from '@/components/Card.vue';
+  import ZEntityGrant from '@/components/EntityGrant.vue';
+  import ZManageRow from '@/components/ManageRow.vue';
+  import ZFieldset from '@/components/layout/Fieldset.vue';
+  import ZFormConnection from '@/components/FormConnection.vue';
+
   import { mapState, mapGetters, Dictionary } from 'vuex';
-  import { toggleArrayMixin } from './utils/toggleArray';
-  import { InformationSchema } from '../../server/src/utils/@types-information';
-  import { State, Computed } from './store/state';
-  import { Actions } from './store/actions';
-  import { Getters } from './store/getters';
-  import { Mutations } from './store/mutations';
-  import { EntityTypes } from './store/getters';
+  import { toggleArrayMixin } from '@/utils/toggleArray';
+  import { InformationSchema } from '@/utils/@types-information';
+  import { State, Computed } from '@/store/state';
+  import { Actions } from '@/store/actions';
+  import { Getters } from '@/store/getters';
+  import { Mutations } from '@/store/mutations';
+  import { EntityTypes } from '@/store/getters';
 
   interface ComputedGetters {
     entityTree(): any;
@@ -100,7 +103,8 @@
         ],
         app: {
           showStickyHeader: false,
-          showQueryLog: true,
+          showQueryLog: false,
+          showAddConnection: false,
         },
         config: {
           manage: [
@@ -160,7 +164,15 @@
         const entityTypes = this.config.manage
           .filter((m) => this.selectedEntities.includes(m.label))
           .map((m) => m.value);
-        return this.entityTree.filter((e) => entityTypes.includes(e.type));
+        return this.entityTree.filter((e: any) => entityTypes.includes(e.type));
+      },
+    },
+    methods: {
+      allowGrant(ent: any): void {
+        console.log('ent:', ent);
+      },
+      revokeGrant(ent: any): void {
+        console.log('ent:', ent);
       },
     },
     components: {
@@ -170,6 +182,7 @@
       ZEntityGrant,
       ZManageRow,
       ZFieldset,
+      ZFormConnection,
     },
   });
 </script>
