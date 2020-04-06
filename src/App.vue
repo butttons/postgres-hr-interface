@@ -77,7 +77,6 @@
       this.$store.dispatch('init');
       this.selectedRoles = this.selected.roles;
       this.selectedSchemas = this.selected.schemas;
-      this.filteredEntitiesCache();
       const THRESHOLD = 375;
       window.addEventListener(
         'scroll',

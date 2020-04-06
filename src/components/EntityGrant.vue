@@ -58,11 +58,11 @@
         const eventName = this.hasGrant(grant) ? 'revoke-grant' : 'allow-grant';
 
         const grantAction = this.hasGrant(grant) ? 'REVOKE' : 'GRANT';
-
+        const grantPronoun = this.hasGrant(grant) ? 'FROM' : 'TO';
         const sqlQuery = this.meta.sql
           .replace('{:action}', grantAction)
           .replace('{:grant}', grant)
-          .concat(` TO ${this.role}`);
+          .concat(` ${grantPronoun} ${this.role}`);
 
         this.$emit('run-query', sqlQuery);
       },
