@@ -12,6 +12,8 @@ export const enum Actions {
     GET_CURRENT_CONNECTION = 'getCurrentConnection',
     NEW_CONNECTION = 'newConnection',
     SET_CONNECTION = 'setConnection',
+    RUN_QUERY = 'runQuery',
+    REFRESH_DATA = 'refreshData',
 }
 
 export const actions: ActionTree<State, State> = {
@@ -60,5 +62,13 @@ export const actions: ActionTree<State, State> = {
         commit(Mutations.RESET_SELECTED);
         commit(Mutations.SET_CACHE_CONNECTION, connectionId);
         dispatch(Actions.FETCH_DATA);
+    },
+    async [Actions.REFRESH_DATA]({ dispatch }, { schemas, grantees }) {
+        await dispatch(Actions.GET_INFO, { schemas });
+        await dispatch(Actions.GET_GRANTS, { grantees });
+    },
+    async [Actions.RUN_QUERY]({ dispatch }, { sql, schemas, grantees }) {
+        await httpApi('/info/query', { sql });
+        dispatch(Actions.REFRESH_DATA, { schemas, grantees });
     },
 };

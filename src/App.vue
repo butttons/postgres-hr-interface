@@ -43,7 +43,7 @@
               z-manage-row(title='Roles' :is-sticky='app.showStickyHeader' type='header')
                 div(v-for='role, index in selectedRoles' :key='index') {{ role }}
             z-manage-row(v-for='entity, index in filteredEntities' :key='index' :title='entity.label' :level='entity.level' :type='entity.type' :meta='entity.meta') 
-              z-entity-grant(v-for='grants, roleName in entity.grants' :key='roleName' :type='entity.type' :grants='grants' :entity='entity' :role='roleName')
+              z-entity-grant(v-for='grants, roleName in entity.grants' :key='roleName' :type='entity.type' :grants='grants' :entity='entity' :role='roleName' :meta='entity.meta' @run-query='runQuery')
 </template>
 <script lang="ts">
   import Vue from 'vue';
@@ -62,10 +62,10 @@
   import { Actions } from '@/store/actions';
   import { Getters } from '@/store/getters';
   import { Mutations } from '@/store/mutations';
-  import { EntityTypes } from '@/store/getters';
+  import { EntityTypes, EntityRow } from '@/store/getters';
 
   interface ComputedGetters {
-    entityTree(): any;
+    entityTree(): EntityRow[];
     schemaList(): any;
     roleList(): any;
   }
@@ -77,6 +77,7 @@
       this.$store.dispatch('init');
       this.selectedRoles = this.selected.roles;
       this.selectedSchemas = this.selected.schemas;
+      this.filteredEntitiesCache();
       const THRESHOLD = 375;
       window.addEventListener(
         'scroll',
@@ -130,6 +131,7 @@
             },
           ],
         },
+        filterCache: [] as any[],
       };
     },
     watch: {
@@ -151,6 +153,7 @@
         Getters.SCHEMA_LIST,
         Getters.ROLE_LIST,
       ]) as unknown) as ComputedGetters),
+
       hasSelected(): boolean {
         return this.selectedSchemas.length > 0 && this.selectedRoles.length > 0;
       },
@@ -160,19 +163,20 @@
           'w-full': !this.app.showStickyHeader,
         };
       },
-      filteredEntities(): any[] {
+      filteredEntities(): EntityRow[] {
         const entityTypes = this.config.manage
           .filter((m) => this.selectedEntities.includes(m.label))
           .map((m) => m.value);
-        return this.entityTree.filter((e: any) => entityTypes.includes(e.type));
+        return this.entityTree.filter((e) => entityTypes.includes(e.type));
       },
     },
     methods: {
-      allowGrant(ent: any): void {
-        console.log('ent:', ent);
-      },
-      revokeGrant(ent: any): void {
-        console.log('ent:', ent);
+      runQuery(sql: string): void {
+        this.$store.dispatch(Actions.RUN_QUERY, {
+          sql,
+          schemas: this.selectedSchemas,
+          grantees: this.selectedRoles,
+        });
       },
     },
     components: {

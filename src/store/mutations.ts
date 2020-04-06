@@ -13,9 +13,14 @@ export const enum Mutations {
     SET_CACHE_STATUS = 'SET_CACHE_STATUS',
     SET_CACHE_CONNECTION = 'SET_CACHE_CONNECTION',
     SET_CACHE_CONNECTION_LIST = 'SET_CACHE_CONNECTION_LIST',
+    REFRESH_TABLE = 'REFRESH_TABLE',
 }
 
 export const mutations: MutationTree<State> = {
+    [Mutations.REFRESH_TABLE]: (state) => {
+        state.refreshTable = true;
+        state.refreshTable = false;
+    },
     [Mutations.SET_INFO]: (state, info) => (state.info = info),
     [Mutations.SET_GRANTS]: (state, grants) => (state.grants = grants),
     [Mutations.SET_SCHEMAS]: (state, schemas) => (state.init.schemas = schemas),

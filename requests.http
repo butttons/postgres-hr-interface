@@ -1,0 +1,7 @@
+POST http://localhost:3000/api/grants/list
+Content-type: application/json
+
+{
+    "schemas": ["ecom_private", "ecom_public"],
+    "grantees": ["ecom_anon", "ecom_user", "ecom_admin"]
+}

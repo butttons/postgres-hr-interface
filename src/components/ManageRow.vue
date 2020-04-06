@@ -33,6 +33,9 @@
     },
     computed: {
       hasMeta(): boolean {
+        if (this.meta && 'sql' in this.meta) {
+          return false;
+        }
         return this.meta !== undefined;
       },
       iconFont(): string {

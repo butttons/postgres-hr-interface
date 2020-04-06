@@ -7,7 +7,7 @@
 </template>
 <script lang="ts">
   import Vue from 'vue';
-  import { EntityTypes } from '@/store/getters';
+  import { EntityTypes, EntityMeta } from '@/store/getters';
   export default Vue.extend({
     name: 'z-entity-grant',
     props: {
@@ -15,6 +15,7 @@
       grants: Array as () => string[],
       entity: Object as () => any,
       role: String,
+      meta: Object as () => EntityMeta,
     },
     data() {
       return {
@@ -55,14 +56,15 @@
       },
       handleGrantClick(grant: string) {
         const eventName = this.hasGrant(grant) ? 'revoke-grant' : 'allow-grant';
-        this.$emit(eventName, {
-          grant,
-          role: this.role,
-          entity: this.entity,
-        });
-        console.log(
-          `ALLOW ${grant} ON ${this.type} ${this.entity.label} TO ${this.role}`,
-        );
+
+        const grantAction = this.hasGrant(grant) ? 'REVOKE' : 'GRANT';
+
+        const sqlQuery = this.meta.sql
+          .replace('{:action}', grantAction)
+          .replace('{:grant}', grant)
+          .concat(` TO ${this.role}`);
+
+        this.$emit('run-query', sqlQuery);
       },
     },
   });

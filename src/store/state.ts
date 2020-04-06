@@ -30,11 +30,13 @@ export interface State {
     init: StateInit;
     info: StateInfo;
     grants: StateGrants;
+    refreshTable: boolean;
 }
 export type Computed<T> = {
     [K in keyof T]: () => T[K];
 };
 export const state: State = {
+    refreshTable: false,
     config: {
         ignorePg: true,
         cache: {

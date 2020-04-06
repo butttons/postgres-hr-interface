@@ -3,6 +3,7 @@ import { State } from './state';
 import { InformationSchema } from '@/utils/@types-information';
 
 export type EntityGrant = Record<string, string[]>;
+export type EntityMeta = Record<string, string>;
 export const enum Getters {
     CONNECTION_LIST = 'clientList',
     SCHEMA_LIST = 'schemaList',
@@ -42,6 +43,15 @@ interface KeyObjectItem {
     object_name: string;
     object_schema: string;
 }
+interface TriggerInfo {
+    label: string;
+    functionTarget: string | null;
+    tableTarget: string;
+    meta: {
+        actionTiming: string;
+        eventManipulation: InformationSchema.Types.Trigger;
+    };
+}
 const columnKey = (c: KeyItem) =>
     `${c.table_schema}.${c.table_name}.${c.column_name}`;
 const tableKey = (t: KeyItem) => `${t.table_schema}.${t.table_name}`;
@@ -58,14 +68,14 @@ const generateGrantMap = (
     roles: string[],
     keyFn: CallableFunction,
 ) => {
-    const map = new Map();
+    const map = new Map<string, EntityGrant>();
     arr.forEach((item) => {
         const id = keyFn(item);
         if (!map.has(id)) {
             map.set(id, {});
         }
         const role = item.grantee;
-        const entityGrants = map.get(id);
+        const entityGrants = map.get(id)!;
         roles.forEach((r) => {
             if (!(r in entityGrants)) {
                 entityGrants[r] = [];
@@ -90,7 +100,10 @@ const generateColumnMap = (arr: any[]) => {
             });
         }
         const tableMap = map.get(tableId);
-        tableMap.columns.set(columnId, { label: columnLabel(item) });
+        tableMap.columns.set(columnId, {
+            label: columnLabel(item),
+            columnName: item.column_name,
+        });
     });
     return map;
 };
@@ -98,19 +111,16 @@ const filterPg = (list: string[], hasIgnore: boolean) =>
     hasIgnore ? list.filter((s) => !s.startsWith('pg_')) : list;
 
 const emptyGrants = (roles: string[]) =>
-    roles.reduce(
-        (acc, r) => {
-            acc[r] = [];
-            return acc;
-        },
-        {} as EntityGrant,
-    );
+    roles.reduce((acc, r) => {
+        acc[r] = [];
+        return acc;
+    }, {} as EntityGrant);
 
-const parseFunctionName = (name: string) => {
+const parseFunctionName = (name: string): string => {
     const parts = name.split('.');
     return parts.length > 1 ? name : `public.${name}`;
 };
-const parseTriggerStatement = (statement: string) => {
+const parseTriggerStatement = (statement: string): string | null => {
     const matchFunction = /EXECUTE (PROCEDURE|FUNCTION) ([\w\.]+)\(/;
     if (!matchFunction.test(statement)) {
         return null;
@@ -118,7 +128,9 @@ const parseTriggerStatement = (statement: string) => {
     const functionName = statement.match(matchFunction)![2];
     return parseFunctionName(functionName);
 };
-const parseTrigger = (trigger: InformationSchema.Default.Trigger) => {
+const parseTrigger = (
+    trigger: InformationSchema.Default.Trigger,
+): TriggerInfo => {
     const functionTarget = parseTriggerStatement(trigger.action_statement);
     const {
         action_timing,
@@ -138,7 +150,7 @@ const parseTrigger = (trigger: InformationSchema.Default.Trigger) => {
         },
     };
 };
-interface EntityRow {
+export interface EntityRow {
     type: EntityTypes;
     level: number;
     label: string;
@@ -149,8 +161,8 @@ const entityRow = (
     type: EntityTypes,
     label: string,
     grants: EntityGrant,
+    meta?: Record<string, string>,
     level: number | null = null,
-    meta?: any[],
 ): EntityRow => {
     const entityLevels = new Map([
         [EntityTypes.TABLE, 0],
@@ -167,7 +179,12 @@ const entityRow = (
         level: level === null ? entityLevels.get(type)! : level,
     };
 };
-
+type TriggerMap = Map<string, TriggerInfo[]>;
+type GrantMap = Map<string, EntityGrant>;
+const sql = (strings: string[], ...keys: any) => {
+    console.log('keys:', keys);
+    console.log('strings:', strings);
+};
 export const getters: GetterTree<State, State> = {
     [Getters.CONNECTION_LIST]: ({
         config: {
@@ -196,6 +213,8 @@ export const getters: GetterTree<State, State> = {
     [Getters.ROUTINE_SET]: (state) =>
         new Set(state.info.routines.map(routineKey)),
     [Getters.ENTITY_TREE]: (state, storeGetters) => {
+        console.log('recalc');
+        const EMPTY_GRANTS = emptyGrants(state.selected.roles);
         const hasTables = state.info.tables.length > 0;
         const hasColumns = state.info.columns.length > 0;
         const hasSelectedRoles = state.selected.roles.length > 0;
@@ -203,26 +222,24 @@ export const getters: GetterTree<State, State> = {
             return [];
         }
         const result: EntityRow[] = [];
-        const mapTableGrants = storeGetters[Getters.GRANT_TABLE_MAP];
-        const mapColumnGrants = storeGetters[Getters.GRANT_COLUMN_MAP];
-        const mapRoutineGrants = storeGetters[Getters.GRANT_ROUTINE_MAP];
+        const mapTableGrants: GrantMap = storeGetters[Getters.GRANT_TABLE_MAP];
+        const mapColumnGrants: GrantMap =
+            storeGetters[Getters.GRANT_COLUMN_MAP];
+        const mapRoutineGrants: GrantMap =
+            storeGetters[Getters.GRANT_ROUTINE_MAP];
 
-        const mapTriggers = storeGetters[Getters.TRIGGER_MAP];
+        const mapTriggers: TriggerMap = storeGetters[Getters.TRIGGER_MAP];
 
         for (let routineId of storeGetters[Getters.ROUTINE_SET]) {
             const hasRoutineGrants = mapRoutineGrants.has(routineId);
             if (hasRoutineGrants) {
-                const routineGrants = mapRoutineGrants.get(routineId);
+                const routineGrants = mapRoutineGrants.get(routineId)!;
                 result.push(
-                    entityRow(EntityTypes.ROUTINE, routineId, routineGrants, 0),
+                    entityRow(EntityTypes.ROUTINE, routineId, routineGrants),
                 );
             } else {
                 result.push(
-                    entityRow(
-                        EntityTypes.ROUTINE,
-                        routineId,
-                        emptyGrants(state.selected.roles),
-                    ),
+                    entityRow(EntityTypes.ROUTINE, routineId, EMPTY_GRANTS),
                 );
             }
         }
@@ -231,30 +248,34 @@ export const getters: GetterTree<State, State> = {
         ]) {
             const hasTableGrants = mapTableGrants.has(tableId);
             if (hasTableGrants) {
-                const tableGrants = mapTableGrants.get(tableId);
-                result.push(entityRow(EntityTypes.TABLE, tableId, tableGrants));
+                const tableGrants = mapTableGrants.get(tableId)!;
+                result.push(
+                    entityRow(EntityTypes.TABLE, tableId, tableGrants, {
+                        sql: `{:action} {:grant} ON TABLE ${tableId}`,
+                    }),
+                );
             } else {
                 result.push(
                     entityRow(
                         EntityTypes.TABLE,
                         tableInfo.label,
-                        emptyGrants(state.selected.roles),
+                        EMPTY_GRANTS,
+                        {
+                            sql: `{:action} {:grant} ON TABLE ${tableInfo.label}`,
+                        },
                     ),
                 );
             }
             const hasTriggers = mapTriggers.has(tableId);
             if (hasTriggers) {
-                const tableTriggers = mapTriggers.get(tableId);
+                const tableTriggers = mapTriggers.get(tableId)!;
                 for (let trigger of tableTriggers) {
                     const { label, functionTarget, meta } = trigger;
                     result.push(
-                        entityRow(
-                            EntityTypes.TRIGGER,
-                            label,
-                            emptyGrants(state.selected.roles),
-                            1,
-                            meta,
-                        ),
+                        entityRow(EntityTypes.TRIGGER, label, EMPTY_GRANTS, {
+                            ...meta,
+                            sql: `{:action} {:grant} ON SEQUENCE ${label}`,
+                        }),
                     );
                     if (functionTarget !== null) {
                         const hasFunctionGrants = mapRoutineGrants.has(
@@ -263,12 +284,15 @@ export const getters: GetterTree<State, State> = {
                         if (hasFunctionGrants) {
                             const functionGrants = mapRoutineGrants.get(
                                 functionTarget,
-                            );
+                            )!;
                             result.push(
                                 entityRow(
                                     EntityTypes.ROUTINE,
                                     functionTarget,
                                     functionGrants,
+                                    {
+                                        sql: `{:action} {:grant} ON FUNCTION ${functionTarget}`,
+                                    },
                                 ),
                             );
                         } else {
@@ -276,7 +300,10 @@ export const getters: GetterTree<State, State> = {
                                 entityRow(
                                     EntityTypes.ROUTINE,
                                     functionTarget,
-                                    emptyGrants(state.selected.roles),
+                                    EMPTY_GRANTS,
+                                    {
+                                        sql: `{:action} {:grant} ON FUNCTION ${functionTarget}`,
+                                    },
                                 ),
                             );
                         }
@@ -287,12 +314,15 @@ export const getters: GetterTree<State, State> = {
             for (let [columnId, columnInfo] of tableInfo.columns) {
                 const hasColumnGrants = mapColumnGrants.has(columnId);
                 if (hasColumnGrants) {
-                    const columnGrants = mapColumnGrants.get(columnId);
+                    const columnGrants = mapColumnGrants.get(columnId)!;
                     result.push(
                         entityRow(
                             EntityTypes.COLUMN,
                             columnInfo.label,
                             columnGrants,
+                            {
+                                sql: `{:action} {:grant} (${columnInfo.columnName}) ON TABLE ${tableInfo.label}`,
+                            },
                         ),
                     );
                 } else {
@@ -300,7 +330,10 @@ export const getters: GetterTree<State, State> = {
                         entityRow(
                             EntityTypes.COLUMN,
                             columnInfo.label,
-                            emptyGrants(state.selected.roles),
+                            EMPTY_GRANTS,
+                            {
+                                sql: `{:action} {:grant} (${columnInfo.columnName}) ON TABLE ${tableInfo.label}`,
+                            },
                         ),
                     );
                 }
@@ -309,14 +342,14 @@ export const getters: GetterTree<State, State> = {
         return result;
     },
     [Getters.TRIGGER_MAP]: (state) => {
-        const map = new Map();
+        const map = new Map<string, TriggerInfo[]>();
         state.info.triggers.forEach((t) => {
             const id = triggerKey(t);
             const value = parseTrigger(t);
             if (!map.has(id)) {
                 map.set(id, [value]);
             } else {
-                map.set(id, [...map.get(id), value]);
+                map.set(id, [...map.get(id)!, value]);
             }
         });
         return map;
