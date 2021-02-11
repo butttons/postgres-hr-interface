@@ -33,7 +33,7 @@ nav.flex.justify-between.items-center.bg-primary-500(
     )
       fa-icon(icon='bolt')
     z-checkbox.ml-2(
-      label='Ignore PG',
+      label='Ignore PG roles',
       :selected='ignorePg',
       @selected='toggleArray(ignorePg, $event)'
     )
@@ -65,7 +65,7 @@ nav.flex.justify-between.items-center.bg-primary-500(
     },
     mounted() {
       if (this.$store.state.config.ignorePg) {
-        this.ignorePg = ['Ignore PG'];
+        this.ignorePg = ['Ignore PG roles'];
       }
       if (this.$store.state.config.cache.currentConnection) {
         this.selectedConnection = this.$store.state.config.cache.currentConnection;
