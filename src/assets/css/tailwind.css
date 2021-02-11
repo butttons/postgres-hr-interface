@@ -21,7 +21,7 @@ fieldset {
     @apply bg-white;
 }
 .button--basic {
-    @apply bg-primary-400 text-white p-2 rounded border-primary-500 border uppercase text-xs;
+    @apply bg-primary-400 text-white py-2 px-6 rounded border-primary-500 border uppercase text-xs;
 }
 .button--basic:hover {
     @apply bg-primary-500 border-primary-600;

@@ -10,7 +10,7 @@ Vue.use(Vuex);
 
 const vuexLocal = new VuexPersistence<State>({
     storage: window.localStorage,
-    reducer: (state) => ({ config: state.config, selected: state.selected }),
+    reducer: (s) => ({ config: s.config, selected: s.selected }),
 });
 export default new Vuex.Store({
     state,

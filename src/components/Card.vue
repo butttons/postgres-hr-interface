@@ -1,14 +1,23 @@
 <template lang="pug">
-  .bg-white.m-3.rounded-lg
-    .font-display.flex.items-center.justify-between.p-2
-      div(:class='titleClass' @click='showBody') {{ title }}
-      div
-        fa-icon.text-gray-400.cursor-pointer(:icon='fontName' class='hover:text-gray-600' @click='handleCollapse' v-if='hasCollapse')
-        fa-icon.text-gray-400.cursor-pointer(icon='times-circle' class='hover:text-gray-600' @click='$emit("close-card")' v-if='hasClose')
-    .font-body(v-if='!isCollapsed')
-      slot
-      slot(name='action')
-
+.bg-white.m-3.rounded-lg.pb-2
+  .font-display.flex.items-center.justify-between.p-2
+    div(:class='titleClass', @click='showBody') {{ title }}
+    div
+      fa-icon.text-gray-400.cursor-pointer(
+        :icon='fontName',
+        class='hover:text-gray-600',
+        @click='handleCollapse',
+        v-if='hasCollapse'
+      )
+      fa-icon.text-gray-400.cursor-pointer(
+        icon='times-circle',
+        class='hover:text-gray-600',
+        @click='$emit("close-card")',
+        v-if='hasClose'
+      )
+  .font-body(v-if='!isCollapsed')
+    slot
+    slot(name='action')
 </template>
 <script lang="ts">
   import Vue from 'vue';

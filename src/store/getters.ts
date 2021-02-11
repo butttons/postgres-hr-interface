@@ -111,10 +111,13 @@ const filterPg = (list: string[], hasIgnore: boolean) =>
     hasIgnore ? list.filter((s) => !s.startsWith('pg_')) : list;
 
 const emptyGrants = (roles: string[]) =>
-    roles.reduce((acc, r) => {
-        acc[r] = [];
-        return acc;
-    }, {} as EntityGrant);
+    roles.reduce(
+        (acc, r) => {
+            acc[r] = [];
+            return acc;
+        },
+        {} as EntityGrant,
+    );
 
 const parseFunctionName = (name: string): string => {
     const parts = name.split('.');
@@ -230,7 +233,7 @@ export const getters: GetterTree<State, State> = {
 
         const mapTriggers: TriggerMap = storeGetters[Getters.TRIGGER_MAP];
 
-        for (let routineId of storeGetters[Getters.ROUTINE_SET]) {
+        for (const routineId of storeGetters[Getters.ROUTINE_SET]) {
             const hasRoutineGrants = mapRoutineGrants.has(routineId);
             if (hasRoutineGrants) {
                 const routineGrants = mapRoutineGrants.get(routineId)!;
@@ -243,7 +246,7 @@ export const getters: GetterTree<State, State> = {
                 );
             }
         }
-        for (let [tableId, tableInfo] of storeGetters[
+        for (const [tableId, tableInfo] of storeGetters[
             Getters.TABLE_COLUMN_MAP
         ]) {
             const hasTableGrants = mapTableGrants.has(tableId);
@@ -261,7 +264,9 @@ export const getters: GetterTree<State, State> = {
                         tableInfo.label,
                         EMPTY_GRANTS,
                         {
-                            sql: `{:action} {:grant} ON TABLE ${tableInfo.label}`,
+                            sql: `{:action} {:grant} ON TABLE ${
+                                tableInfo.label
+                            }`,
                         },
                     ),
                 );
@@ -321,7 +326,9 @@ export const getters: GetterTree<State, State> = {
                             columnInfo.label,
                             columnGrants,
                             {
-                                sql: `{:action} {:grant} (${columnInfo.columnName}) ON TABLE ${tableInfo.label}`,
+                                sql: `{:action} {:grant} (${
+                                    columnInfo.columnName
+                                }) ON TABLE ${tableInfo.label}`,
                             },
                         ),
                     );
@@ -332,7 +339,9 @@ export const getters: GetterTree<State, State> = {
                             columnInfo.label,
                             EMPTY_GRANTS,
                             {
-                                sql: `{:action} {:grant} (${columnInfo.columnName}) ON TABLE ${tableInfo.label}`,
+                                sql: `{:action} {:grant} (${
+                                    columnInfo.columnName
+                                }) ON TABLE ${tableInfo.label}`,
                             },
                         ),
                     );

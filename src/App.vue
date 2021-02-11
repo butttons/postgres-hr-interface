@@ -1,52 +1,111 @@
 <template lang="pug">
-  #app.bg-primary-100.pb-2.font-body
-    nav-bar(@show-query-log='app.showQueryLog = true' @add-connection='app.showAddConnection = true')
-    main
-      transition(enter-active-class='animated slideInRight fast' leave-active-class='animated slideOutRight faster')
-        .query-log.h-screen.bg-primary-700.fixed.top-0.right-0(v-if='app.showQueryLog' class='w-1/2')
-          .flex.justify-between.items-center.text-white
-            .text-lg.cursor-pointer.p-2(@click='app.showQueryLog = false')
-              fa-icon.mr-1(icon='caret-right')
-              | Query Log
-            fa-icon.mr-2(icon='sync')
-          .p-2.h-full
-            pre.bg-white.rounded.p-1.h-full
-              .text-xs
-                span.text-red-500 Notice: 
-                span Works
-      z-card.mx-auto(v-if='app.showAddConnection' @close-card='app.showAddConnection = false' :has-collapse='false' has-close class='w-1/2' title='Add new connection')
-        z-form-connection
-          
-      //z-card(title='Add entity')
-        form.px-2
-          .flex.justify-between
-            z-fieldset.mr-2(class='w-1/2' label='Name')
-              input.input--basic(type='text')
-            z-fieldset(class='w-1/2' label='Type')
-              select.input--basic
-                option ROLE
-          .action__bar.mt-2.border-t
-            .py-2
-              button.button--basic Add
-            
-      z-card(title='Select Roles')
-        .p-2
-          z-checkbox.mr-1.mb-1(v-for='label, index in roleList' :key='index' :label='label' :selected='selectedRoles' @selected='toggleArray(selectedRoles, $event)')
-      z-card(title='Select Schemas')
-        .p-2
-          z-checkbox.mr-1.mb-1(v-for='label, index in schemaList' :key='index' :label='label' :selected='selectedSchemas' @selected='toggleArray(selectedSchemas, $event)')
-      z-card(ref='manageCard' title='Manage')
-        .px-2
-          z-checkbox.mr-2(v-for='item, index in config.manage' :key='index' :label='item.label' :selected='selectedEntities' @selected='toggleArray(selectedEntities, $event)')
-          .mt-2(v-if='hasSelected')
-            div(:class='headerClass')
-              z-manage-row(title='Roles' :is-sticky='app.showStickyHeader' type='header')
-                div(v-for='role, index in selectedRoles' :key='index') {{ role }}
-            z-manage-row(v-for='entity, index in filteredEntities' :key='index' :title='entity.label' :level='entity.level' :type='entity.type' :meta='entity.meta') 
-              z-entity-grant(v-for='grants, roleName in entity.grants' :key='roleName' :type='entity.type' :grants='grants' :entity='entity' :role='roleName' :meta='entity.meta' @run-query='runQuery')
+#app.bg-primary-100.pb-2.font-body
+  nav-bar(
+    @show-query-log='app.showQueryLog = true',
+    @add-connection='app.showAddConnection = true'
+  )
+  main
+    transition(
+      enter-active-class='animated slideInRight fast',
+      leave-active-class='animated slideOutRight faster'
+    )
+      .query-log.h-screen.bg-primary-700.fixed.top-0.right-0(
+        v-if='app.showQueryLog',
+        class='w-1/2'
+      )
+        .flex.justify-between.items-center.text-white
+          .text-lg.cursor-pointer.p-2(@click='app.showQueryLog = false')
+            fa-icon.mr-1(icon='caret-right')
+            | Query Log
+          fa-icon.mr-2(icon='sync')
+        .p-2.h-full
+          pre.bg-white.rounded.p-1.h-full
+            .text-xs
+              span.text-red-500 Notice:
+              span Works
+    z-card.mx-auto(
+      v-if='app.showAddConnection',
+      @close-card='app.showAddConnection = false',
+      :has-collapse='false',
+      has-close,
+      class='w-1/2',
+      title='Add new connection'
+    )
+      z-form-connection
+
+    z-card(title='Add entity')
+      form.px-2
+        .flex.justify-between
+          z-fieldset.mr-2(class='w-1/2', label='Name')
+            input.input--basic(type='text')
+          z-fieldset(class='w-1/2', label='Type')
+            select.input--basic
+              option ROLE
+              option SCHEMA
+        .action__bar.mt-2.border-t
+          .py-2
+            button.button--basic Add
+
+    z-card(title='Select Roles')
+      .p-2
+        z-checkbox.mr-1.mb-1(
+          v-for='label, index of roleList',
+          :key='index',
+          :label='label',
+          :selected='selectedRoles',
+          @selected='toggleArray(selectedRoles, $event)'
+        )
+    z-card(title='Select Schemas')
+      .p-2 
+        z-checkbox.mr-1.mb-1(
+          v-for='label, index of schemaList',
+          :key='index',
+          :label='label',
+          :selected='selectedSchemas',
+          @selected='toggleArray(selectedSchemas, $event)'
+        )
+    z-card(ref='manageCard', title='Manage')
+      .px-2
+        z-checkbox.mr-2(
+          v-for='item, index of config.manage',
+          :key='index',
+          :label='item.label',
+          :selected='selectedEntities',
+          @selected='toggleArray(selectedEntities, $event)'
+        )
+        .mt-2(v-if='hasSelected')
+          div(:class='headerClass')
+            z-manage-row(
+              title='Roles',
+              :is-sticky='app.showStickyHeader',
+              type='header'
+            )
+              div(v-for='role, index of selectedRoles', :key='index') {{ role }}
+          draggable
+            transition-group
+              z-manage-row(
+                v-for='entity, index of filteredEntities',
+                :key='entity.label',
+                :title='entity.label',
+                :level='entity.level',
+                :type='entity.type',
+                :meta='entity.meta'
+              ) 
+                z-entity-grant(
+                  v-for='grants, roleName of entity.grants',
+                  :key='roleName',
+                  :type='entity.type',
+                  :grants='grants',
+                  :entity='entity',
+                  :role='roleName',
+                  :meta='entity.meta',
+                  @run-query='runQuery'
+                )
 </template>
 <script lang="ts">
   import Vue from 'vue';
+  import draggable from 'vuedraggable';
+
   import NavBar from '@/components/NavBar.vue';
   import ZCheckbox from '@/components/layout/Checkbox.vue';
   import ZCard from '@/components/Card.vue';
@@ -186,6 +245,7 @@
       ZManageRow,
       ZFieldset,
       ZFormConnection,
+      draggable,
     },
   });
 </script>

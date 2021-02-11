@@ -1,4 +1,4 @@
-const API_ENDPOINT = 'http://localhost:3000/api';
+const API_ENDPOINT = 'http://localhost:4000/api';
 export const httpApi = async (endpoint: string, data: any, method = 'POST') => {
     const isPost = method === 'POST';
     const headers: Record<string, string> = isPost
