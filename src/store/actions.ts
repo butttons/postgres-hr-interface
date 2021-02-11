@@ -11,6 +11,7 @@ export const enum Actions {
     GET_CACHED_CONNECTIONS = 'getCachedClients',
     GET_CURRENT_CONNECTION = 'getCurrentConnection',
     NEW_CONNECTION = 'newConnection',
+    REMOVE_CONNECTION = 'removeConnection',
     SET_CONNECTION = 'setConnection',
     RUN_QUERY = 'runQuery',
     REFRESH_DATA = 'refreshData',
@@ -55,10 +56,17 @@ export const actions: ActionTree<State, State> = {
         commit(Mutations.SET_CACHE_CONNECTION_LIST, connections);
     },
     async [Actions.NEW_CONNECTION]({ commit }, { connection }) {
-        const allConnections = await httpApi('/cache/newConnection', {
+        const { connections } = await httpApi('/cache/newConnection', {
             connection,
         });
-        commit(Mutations.SET_CACHE_CONNECTION_LIST, allConnections);
+        commit(Mutations.SET_CACHE_CONNECTION_LIST, connections);
+    },
+    async [Actions.REMOVE_CONNECTION]({ commit, state }) {
+        const { connections } = await httpApi('/cache/removeConnection', {
+            connectionId: state.config.cache.currentConnection,
+        });
+        commit(Mutations.SET_CACHE_CONNECTION_LIST, connections);
+        commit(Mutations.SET_CACHE_CONNECTION, null);
     },
     async [Actions.SET_CONNECTION]({ commit, dispatch }, { connectionId }) {
         await httpApi('/cache/setConnection', { connectionId });

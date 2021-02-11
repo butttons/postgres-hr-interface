@@ -1,4 +1,7 @@
-const API_ENDPOINT = 'http://localhost:4000/api';
+const API_ENDPOINT =
+    process.env.NODE_ENV === 'production'
+        ? '/api'
+        : 'http://localhost:9876/api';
 export const httpApi = async (
     endpoint: string,
     data: unknown,

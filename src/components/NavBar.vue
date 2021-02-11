@@ -18,20 +18,25 @@ nav.flex.justify-between.items-center.bg-primary-500(
           :value='client[0]'
         ) {{ client[1] | clientName }}
       button.button__nav--icon.ml-1(
-        v-tooltip='"Add new connection"',
+        v-tooltip='"Add new database"',
         @click='$emit("add-connection")'
       )
         fa-icon.mr-1(icon='plus')
-    z-checkbox.mr-2(
-      label='Ignore PG',
-      :selected='ignorePg',
-      @selected='toggleArray(ignorePg, $event)'
-    )
+      button.button__nav--icon.ml-1(
+        v-tooltip='"Remove database"',
+        @click='handleRemoveConnection'
+      )
+        fa-icon.mr-1(icon='trash')
     button.button__nav--icon(
       @click='$emit("show-query-log")',
       v-tooltip='"Show queries"'
     )
       fa-icon(icon='bolt')
+    z-checkbox.ml-2(
+      label='Ignore PG',
+      :selected='ignorePg',
+      @selected='toggleArray(ignorePg, $event)'
+    )
 </template>
 <script lang="ts">
   import Vue from 'vue';
@@ -83,6 +88,9 @@ nav.flex.justify-between.items-center.bg-primary-500(
         this.$store.dispatch(Actions.SET_CONNECTION, {
           connectionId: this.selectedConnection,
         });
+      },
+      handleRemoveConnection() {
+        this.$store.dispatch(Actions.REMOVE_CONNECTION);
       },
     },
     components: {
