@@ -9,20 +9,24 @@
       enter-active-class='animated slideInRight fast',
       leave-active-class='animated slideOutRight faster'
     )
-      .query-log.h-screen.bg-primary-700.fixed.top-0.right-0(
+      .query-log.h-screen.bg-gray-800.fixed.top-0.right-0.shadow-lg(
         v-if='app.showQueryLog',
-        class='w-1/2'
+        class='w-1/2',
+        tabindex='0',
+        @blur='app.showQueryLog = false'
       )
         .flex.justify-between.items-center.text-white
           .text-lg.cursor-pointer.p-2(@click='app.showQueryLog = false')
             fa-icon.mr-1(icon='caret-right')
             | Query Log
-          fa-icon.mr-2(icon='sync')
         .p-2.h-full
           pre.bg-white.rounded.p-1.h-full
-            .text-xs
-              span.text-red-500 Notice:
-              span Works
+            .text-xs.whitespace-normal(
+              v-for='log, index of queryLog',
+              :key='index'
+            )
+              span.text-blue-500 {{ log.date.toISOString() }}:&nbsp;
+              | {{ log.sql }}
     z-card.mx-auto(
       v-if='app.showAddConnection',
       @close-card='app.showAddConnection = false',
@@ -33,15 +37,15 @@
     )
       z-form-connection
 
-    z-card(title='Add entity')
-      form.px-2
+    z-card(title='Add role or schema', :collapsed='true')
+      form.px-2(@submit.prevent='handleAddEntity')
         .flex.justify-between
           z-fieldset.mr-2(class='w-1/2', label='Name')
-            input.input--basic(type='text')
+            input.input--basic(type='text', v-model='entityForm.name')
           z-fieldset(class='w-1/2', label='Type')
-            select.input--basic
-              option ROLE
-              option SCHEMA
+            select.input--basic(v-model='entityForm.type')
+              option(value='ROLE') Role
+              option(value='SCHEMA') Schema
         .action__bar.mt-2.border-t
           .py-2
             button.button--basic Add
@@ -66,14 +70,19 @@
         )
     z-card(ref='manageCard', title='Manage')
       .px-2
-        z-checkbox.mr-2(
-          v-for='item, index of config.manage',
-          :key='index',
-          :label='item.label',
-          :selected='selectedEntities',
-          @selected='toggleArray(selectedEntities, $event)'
-        )
+        .mt-2.text-yellow-600.text-lg.bg-yellow-200.p-2.rounded(
+          v-if='!hasSelected'
+        ) 
+          fa-icon.mr-2(icon='exclamation-triangle')
+          | Please select a role and a schema to continue
         .mt-2(v-if='hasSelected')
+          z-checkbox.mr-2(
+            v-for='item, index of config.manage',
+            :key='index',
+            :label='item.label',
+            :selected='selectedEntities',
+            @selected='toggleArray(selectedEntities, $event)'
+          )
           div(:class='headerClass')
             z-manage-row(
               title='Roles',
@@ -85,7 +94,7 @@
             transition-group
               z-manage-row(
                 v-for='entity, index of filteredEntities',
-                :key='entity.label',
+                :key='`${entity.label}-${index}`',
                 :title='entity.label',
                 :level='entity.level',
                 :type='entity.type',
@@ -125,17 +134,22 @@
 
   interface ComputedGetters {
     entityTree(): EntityRow[];
-    schemaList(): any;
-    roleList(): any;
+    schemaList(): string[];
+    roleList(): string[];
   }
 
   export default Vue.extend({
     name: 'app',
     mixins: [toggleArrayMixin],
-    mounted() {
-      this.$store.dispatch('init');
-      this.selectedRoles = this.selected.roles;
-      this.selectedSchemas = this.selected.schemas;
+    async mounted() {
+      const initResponse = await this.$store.dispatch(Actions.INIT);
+      if (!('noConfig' in initResponse)) {
+        this.selectedRoles = this.selected.roles;
+        this.selectedSchemas = this.selected.schemas;
+      } else {
+        this.app.noConfig = true;
+        this.app.showAddConnection = true;
+      }
       const THRESHOLD = 375;
       window.addEventListener(
         'scroll',
@@ -164,6 +178,7 @@
           showStickyHeader: false,
           showQueryLog: false,
           showAddConnection: false,
+          noConfig: true,
         },
         config: {
           manage: [
@@ -190,6 +205,10 @@
           ],
         },
         filterCache: [] as any[],
+        entityForm: {
+          name: '',
+          type: 'ROLE',
+        },
       };
     },
     watch: {
@@ -205,7 +224,11 @@
       },
     },
     computed: {
-      ...((mapState(['init', 'selected']) as unknown) as Computed<State>),
+      ...((mapState([
+        'init',
+        'selected',
+        'queryLog',
+      ]) as unknown) as Computed<State>),
       ...((mapGetters([
         Getters.ENTITY_TREE,
         Getters.SCHEMA_LIST,
@@ -235,6 +258,17 @@
           schemas: this.selectedSchemas,
           grantees: this.selectedRoles,
         });
+      },
+      handleAddEntity(): void {
+        const sql = `CREATE ${this.entityForm.type} ${this.entityForm.name}`;
+        const schemas = this.selectedSchemas || [];
+        const grantees = this.selectedRoles || [];
+        this.$store.dispatch(Actions.RUN_QUERY, {
+          sql,
+          schemas,
+          grantees,
+        });
+        this.entityForm.name = '';
       },
     },
     components: {

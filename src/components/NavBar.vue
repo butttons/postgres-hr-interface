@@ -1,16 +1,37 @@
 <template lang="pug">
-  nav.flex.justify-between.items-center.bg-primary-500(role='navigation' aria-label='main navigation')
-    .text-lg.text-white.p-3.font-display Postgres
-      strong HR
-    div.mr-3.flex.items-center
-      div.mr-2.flex
-        select.input--full(@change='handleConnectionChange' v-model='selectedConnection')
-          option(v-for='client, index in clientList' :key='index' :value='client[0]') {{ client[1] | clientName}}
-        button.button__nav--icon.ml-1(v-tooltip='"Add new connection"' @click='$emit("add-connection")')
-          fa-icon.mr-1(icon='plus')
-      z-checkbox.mr-2(label='Ignore PG' :selected='ignorePg' @selected='toggleArray(ignorePg, $event)')
-      button.button__nav--icon(@click='$emit("show-query-log")' v-tooltip='"Show queries"')
-        fa-icon(icon='bolt')
+nav.flex.justify-between.items-center.bg-primary-500(
+  role='navigation',
+  aria-label='main navigation'
+)
+  .text-lg.text-white.p-3.font-display Postgres
+    strong HR
+  .mr-3.flex.items-center
+    .mr-2.flex
+      select.input--full(
+        @change='handleConnectionChange',
+        v-model='selectedConnection',
+        v-if='clientList.length > 0'
+      )
+        option(
+          v-for='client, index of clientList',
+          :key='index',
+          :value='client[0]'
+        ) {{ client[1] | clientName }}
+      button.button__nav--icon.ml-1(
+        v-tooltip='"Add new connection"',
+        @click='$emit("add-connection")'
+      )
+        fa-icon.mr-1(icon='plus')
+    z-checkbox.mr-2(
+      label='Ignore PG',
+      :selected='ignorePg',
+      @selected='toggleArray(ignorePg, $event)'
+    )
+    button.button__nav--icon(
+      @click='$emit("show-query-log")',
+      v-tooltip='"Show queries"'
+    )
+      fa-icon(icon='bolt')
 </template>
 <script lang="ts">
   import Vue from 'vue';

@@ -107,8 +107,8 @@ const generateColumnMap = (arr: any[]) => {
     });
     return map;
 };
-const filterPg = (list: string[], hasIgnore: boolean) =>
-    hasIgnore ? list.filter((s) => !s.startsWith('pg_')) : list;
+const filterPg = (list: string[] | null, hasIgnore: boolean) =>
+    hasIgnore && list ? list.filter((s) => !s.startsWith('pg_')) : list;
 
 const emptyGrants = (roles: string[]) =>
     roles.reduce(
@@ -184,10 +184,6 @@ const entityRow = (
 };
 type TriggerMap = Map<string, TriggerInfo[]>;
 type GrantMap = Map<string, EntityGrant>;
-const sql = (strings: string[], ...keys: any) => {
-    console.log('keys:', keys);
-    console.log('strings:', strings);
-};
 export const getters: GetterTree<State, State> = {
     [Getters.CONNECTION_LIST]: ({
         config: {
@@ -216,7 +212,6 @@ export const getters: GetterTree<State, State> = {
     [Getters.ROUTINE_SET]: (state) =>
         new Set(state.info.routines.map(routineKey)),
     [Getters.ENTITY_TREE]: (state, storeGetters) => {
-        console.log('recalc');
         const EMPTY_GRANTS = emptyGrants(state.selected.roles);
         const hasTables = state.info.tables.length > 0;
         const hasColumns = state.info.columns.length > 0;
@@ -238,11 +233,15 @@ export const getters: GetterTree<State, State> = {
             if (hasRoutineGrants) {
                 const routineGrants = mapRoutineGrants.get(routineId)!;
                 result.push(
-                    entityRow(EntityTypes.ROUTINE, routineId, routineGrants),
+                    entityRow(EntityTypes.ROUTINE, routineId, routineGrants, {
+                        sql: `{:action} {:grant} ON FUNCTION ${routineId}`,
+                    }),
                 );
             } else {
                 result.push(
-                    entityRow(EntityTypes.ROUTINE, routineId, EMPTY_GRANTS),
+                    entityRow(EntityTypes.ROUTINE, routineId, EMPTY_GRANTS, {
+                        sql: `{:action} {:grant} ON FUNCTION ${routineId}`,
+                    }),
                 );
             }
         }
@@ -274,7 +273,7 @@ export const getters: GetterTree<State, State> = {
             const hasTriggers = mapTriggers.has(tableId);
             if (hasTriggers) {
                 const tableTriggers = mapTriggers.get(tableId)!;
-                for (let trigger of tableTriggers) {
+                for (const trigger of tableTriggers) {
                     const { label, functionTarget, meta } = trigger;
                     result.push(
                         entityRow(EntityTypes.TRIGGER, label, EMPTY_GRANTS, {
@@ -316,7 +315,7 @@ export const getters: GetterTree<State, State> = {
                 }
             }
 
-            for (let [columnId, columnInfo] of tableInfo.columns) {
+            for (const [columnId, columnInfo] of tableInfo.columns) {
                 const hasColumnGrants = mapColumnGrants.has(columnId);
                 if (hasColumnGrants) {
                     const columnGrants = mapColumnGrants.get(columnId)!;
@@ -363,70 +362,4 @@ export const getters: GetterTree<State, State> = {
         });
         return map;
     },
-    /* 
-    [Getters.ENTITIES]: (state) => {
-        const hasTables = state.info.tables.length > 0;
-        const hasColumns = state.info.columns.length > 0;
-        const hasSelectedRoles = state.selected.roles.length > 0;
-
-        if (!hasColumns || !hasTables || !hasSelectedRoles) {
-            return [];
-        }
-        const selectedUsers = state.selected.roles;
-
-        const filterColumns = (t: InformationSchema.Default.Table) => (
-            c: InformationSchema.Default.Column,
-        ) => c.table_name === t.table_name && c.table_schema === t.table_schema;
-
-        const filterTables = (
-            role: string,
-            t: InformationSchema.Default.Table,
-        ) => (gt: InformationSchema.Grants.Table) =>
-            gt.table_name === t.table_name &&
-            gt.table_schema === t.table_schema &&
-            gt.grantee === role;
-
-        const result = state.info.tables.reduce(
-            (acc, table) => {
-                const { table_name, table_schema } = table;
-
-                const columns = state.info.columns.filter(filterColumns(table));
-
-                const tableGrants = selectedUsers.map((role) =>
-                    state.grants.tables
-                        .filter(filterTables(role, table))
-                        .map((g) => g.privilege_type),
-                );
-
-                acc.push({
-                    type: EntityTypes.TABLE,
-                    level: 0,
-                    label: `${table_schema}.${table_name}`,
-                    grants: tableGrants,
-                });
-                columns.forEach((c) => {
-                    const columnGrants = selectedUsers.map((role) =>
-                        state.grants.columns
-                            .filter(
-                                (cg) =>
-                                    cg.column_name === c.column_name &&
-                                    cg.table_name === table_name &&
-                                    cg.table_schema === table_schema &&
-                                    cg.grantee === role,
-                            )
-                            .map((g) => g.privilege_type),
-                    );
-                    acc.push({
-                        type: EntityTypes.COLUMN,
-                        level: 1,
-                        label: `${c.table_name}.${c.column_name}`,
-                        grants: columnGrants,
-                    });
-                });
-                return acc;
-            },
-            [] as any[],
-        );
-        return result;
-    }, */
 };

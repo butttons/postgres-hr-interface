@@ -24,6 +24,10 @@ interface StateGrants {
     routines: InformationSchema.Grants.Routine[];
     tables: InformationSchema.Grants.Table[];
 }
+interface QueryLog {
+    sql: string;
+    date: Date;
+}
 export interface State {
     config: StateConfig;
     selected: StateInit;
@@ -31,10 +35,9 @@ export interface State {
     info: StateInfo;
     grants: StateGrants;
     refreshTable: boolean;
+    queryLog: QueryLog[];
 }
-export type Computed<T> = {
-    [K in keyof T]: () => T[K];
-};
+export type Computed<T> = { [K in keyof T]: () => T[K] };
 export const state: State = {
     refreshTable: false,
     config: {
@@ -66,4 +69,5 @@ export const state: State = {
         routines: [],
         tables: [],
     },
+    queryLog: [],
 };

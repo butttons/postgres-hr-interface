@@ -20,7 +20,7 @@ export const actions: ActionTree<State, State> = {
     async [Actions.INIT]({ dispatch }) {
         dispatch(Actions.GET_CURRENT_CONNECTION);
         dispatch(Actions.GET_CACHED_CONNECTIONS);
-        dispatch(Actions.FETCH_DATA);
+        return dispatch(Actions.FETCH_DATA);
     },
     async [Actions.GET_CURRENT_CONNECTION]({ commit }) {
         const cachedClient = await httpApi('/cache/current', null, 'GET');
@@ -33,9 +33,12 @@ export const actions: ActionTree<State, State> = {
         }
     },
     async [Actions.FETCH_DATA]({ commit }) {
-        const { schemas, roles } = await httpApi('/info/init', null, 'GET');
-        commit(Mutations.SET_SCHEMAS, schemas);
-        commit(Mutations.SET_ROLES, roles);
+        const initInfo = await httpApi('/info/init', null, 'GET');
+        if (!('noConfig' in initInfo)) {
+            commit(Mutations.SET_SCHEMAS, initInfo.schemas);
+            commit(Mutations.SET_ROLES, initInfo.roles);
+        }
+        return initInfo;
     },
     async [Actions.GET_INFO]({ commit }, { schemas }) {
         commit(Mutations.SELECT_SCHEMAS, schemas);
@@ -66,9 +69,14 @@ export const actions: ActionTree<State, State> = {
     async [Actions.REFRESH_DATA]({ dispatch }, { schemas, grantees }) {
         await dispatch(Actions.GET_INFO, { schemas });
         await dispatch(Actions.GET_GRANTS, { grantees });
+        await dispatch(Actions.FETCH_DATA);
     },
-    async [Actions.RUN_QUERY]({ dispatch }, { sql, schemas, grantees }) {
+    async [Actions.RUN_QUERY](
+        { dispatch, commit },
+        { sql, schemas, grantees },
+    ) {
         await httpApi('/info/query', { sql });
+        commit(Mutations.ADD_QUERY_LOG, sql);
         dispatch(Actions.REFRESH_DATA, { schemas, grantees });
     },
 };

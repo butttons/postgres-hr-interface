@@ -1,5 +1,9 @@
 const API_ENDPOINT = 'http://localhost:4000/api';
-export const httpApi = async (endpoint: string, data: any, method = 'POST') => {
+export const httpApi = async (
+    endpoint: string,
+    data: unknown,
+    method = 'POST',
+) => {
     const isPost = method === 'POST';
     const headers: Record<string, string> = isPost
         ? {

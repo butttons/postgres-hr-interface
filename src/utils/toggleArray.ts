@@ -1,4 +1,4 @@
-export const toggleArray = (array: any[], item: any) => {
+export const toggleArray = (array: unknown[], item: unknown) => {
     if (!array.includes(item)) {
         array.push(item);
     } else {

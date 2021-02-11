@@ -14,6 +14,7 @@ export const enum Mutations {
     SET_CACHE_CONNECTION = 'SET_CACHE_CONNECTION',
     SET_CACHE_CONNECTION_LIST = 'SET_CACHE_CONNECTION_LIST',
     REFRESH_TABLE = 'REFRESH_TABLE',
+    ADD_QUERY_LOG = 'ADD_QUERY_LOG',
 }
 
 export const mutations: MutationTree<State> = {
@@ -41,4 +42,6 @@ export const mutations: MutationTree<State> = {
         (state.config.cache.currentConnection = client),
     [Mutations.SET_CACHE_CONNECTION_LIST]: (state, clientList) =>
         (state.config.cache.connectionList = clientList),
+    [Mutations.ADD_QUERY_LOG]: (state, sql) =>
+        state.queryLog.push({ sql, date: new Date() }),
 };

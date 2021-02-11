@@ -1,13 +1,15 @@
 <template lang="pug">
-  .flex.rounded.items-center.mt-1(:class='wrapClass')
-    .w-header__title(:class='titleStyle')
-      .row__head.w-100.text-gray-600.bg-gray-300.select-none(:class='titleFont') 
-        fa-icon.mr-2(:icon='iconFont' v-tooltip='type')
-        | {{ title }}
-        span.text-xs.ml-2.bg-gray-500.text-gray-800.p-1.rounded(v-if='hasMeta')
-          | {{ Object.values(meta).join(' ') }}
-    .row__data.flex.justify-around.p-2.flex-grow.text-gray-700.bg-gray-200.rounded-r(:class='slotClass')
-      slot
+.flex.rounded.items-center.mt-1(:class='wrapClass')
+  .w-header__title(:class='titleStyle')
+    .row__head.w-100.text-gray-600.bg-gray-300.select-none(:class='titleFont') 
+      fa-icon.mr-2(:icon='iconFont', v-tooltip='type')
+      | {{ title }}
+      span.text-xs.ml-2.bg-gray-500.text-gray-800.p-1.rounded(v-if='hasMeta')
+        | {{ Object.values(meta).join(" ") }}
+  .row__data.flex.justify-around.p-2.flex-grow.text-gray-700.bg-gray-200.rounded-r(
+    :class='slotClass'
+  )
+    slot
 </template>
 <script lang="ts">
   import Vue from 'vue';

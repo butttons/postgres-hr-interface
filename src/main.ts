@@ -24,6 +24,7 @@ import {
     faArrowRight,
     faTimesCircle,
     faPlus,
+    faExclamationTriangle,
 } from '@fortawesome/free-solid-svg-icons';
 import { faCircle } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
@@ -45,6 +46,7 @@ library.add(
     faArrowRight,
     faTimesCircle,
     faPlus,
+    faExclamationTriangle,
 );
 Vue.use(VTooltip);
 
